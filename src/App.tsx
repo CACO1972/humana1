@@ -121,6 +121,105 @@ const STATS = [
 
 // --- Components ---
 
+const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setTimeout(onComplete, 800);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 30);
+    return () => clearInterval(timer);
+  }, [onComplete]);
+
+  return (
+    <motion.div 
+      exit={{ opacity: 0, scale: 1.1 }}
+      transition={{ duration: 1, ease: "easeInOut" }}
+      className="fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden"
+    >
+      {/* Background Stars/Video Simulation */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(117,51,204,0.15)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+        
+        {/* Animated Particles */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * window.innerWidth, 
+              y: Math.random() * window.innerHeight,
+              opacity: Math.random()
+            }}
+            animate={{ 
+              y: [null, Math.random() * -100],
+              opacity: [0, 1, 0]
+            }}
+            transition={{ 
+              duration: Math.random() * 3 + 2, 
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            className="absolute w-1 h-1 bg-white rounded-full"
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="mb-12"
+        >
+          <div className="flex items-center gap-6">
+            <HumanaLogo className="w-20 h-20 md:w-24 md:h-24" />
+            <div className="flex flex-col">
+              <span className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">Humana.AI</span>
+              <span className="text-[10px] md:text-[12px] text-indigo-velvet-400 font-black tracking-[0.8em] uppercase mt-2">Inteligencia Clínica</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Progress Bar */}
+        <div className="w-64 h-[2px] bg-white/5 rounded-full overflow-hidden relative">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            className="absolute inset-y-0 left-0 bg-indigo-velvet-500 shadow-[0_0_15px_rgba(117,51,204,0.8)]"
+          />
+        </div>
+        
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <div className="text-[9px] font-mono text-white/20 tracking-[0.4em] uppercase">
+            Initializing_Ecosystem_v2.4
+          </div>
+          <div className="text-[10px] font-mono text-indigo-velvet-400 font-bold">
+            {progress}%
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Tagline */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 1 }}
+        className="absolute bottom-12 text-[11px] font-medium text-white/30 italic tracking-widest text-center px-6"
+      >
+        Ecosistema dental inteligente · Claridad clínica que genera confianza
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const VisionHeader = () => (
   <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 relative">
     <motion.div 
@@ -161,6 +260,15 @@ const VisionHeader = () => (
         Cuando confía, se atiende.<br />
         <span className="text-white font-bold not-italic">Eso es HUMANA.AI. Claridad clínica que genera confianza.</span>
       </p>
+      <div className="mt-8 flex flex-col items-center md:items-end w-full max-w-3xl">
+        <div className="h-[1px] w-12 bg-blue-500/30 mb-4" />
+        <div className="text-[10px] font-black tracking-[0.2em] text-white/80 uppercase">
+          Dr. Carlos Montoya
+        </div>
+        <div className="text-[9px] font-medium text-white/40 tracking-wider mt-1">
+          Director Clínica Miró y Desarrollador de Humana.AI
+        </div>
+      </div>
     </motion.div>
 
     <div className="flex gap-6 mt-16">
@@ -795,6 +903,7 @@ const HeroVideoBackground = ({ src }: { src?: string }) => {
 };
 
 export default function App() {
+  const [isLoaded, setIsLoaded] = useState(false);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -818,6 +927,12 @@ export default function App() {
   return (
     <div ref={containerRef} className="min-h-screen bg-[#020202] text-[#F5F2ED] font-sans selection:bg-indigo-velvet-500 selection:text-white overflow-x-hidden">
       
+      <AnimatePresence>
+        {!isLoaded && (
+          <SplashScreen onComplete={() => setIsLoaded(true)} />
+        )}
+      </AnimatePresence>
+
       <HUDOverlay />
 
       {/* Cinematic Background */}
