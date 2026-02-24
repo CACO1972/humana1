@@ -1,0 +1,8 @@
+{
+  "name": "HUMANA.AI | Odontología 5P",
+  "description": "Hacia la Odontología 5P con IA. Un ecosistema clínico diseñado para potenciar al dentista y democratizar el acceso a la salud dental.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

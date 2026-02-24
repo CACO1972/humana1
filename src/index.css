@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-indigo-velvet-50: #f1ebfa;
+  --color-indigo-velvet-100: #e3d6f5;
+  --color-indigo-velvet-200: #c8adeb;
+  --color-indigo-velvet-300: #ac85e0;
+  --color-indigo-velvet-400: #915cd6;
+  --color-indigo-velvet-500: #7533cc;
+  --color-indigo-velvet-600: #5e29a3;
+  --color-indigo-velvet-700: #461f7a;
+  --color-indigo-velvet-800: #2f1452;
+  --color-indigo-velvet-900: #170a29;
+  --color-indigo-velvet-950: #10071d;
+
+  --animate-scan: scan 4s linear infinite;
+  --animate-pulse-slow: pulse-slow 6s ease-in-out infinite;
+
+  @keyframes scan {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-[#0A0A0A] text-[#F5F2ED];
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glow-indigo {
+    box-shadow: 0 0 20px rgba(117, 51, 204, 0.3), 0 0 40px rgba(117, 51, 204, 0.1);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(201, 168, 108, 0.3), 0 0 40px rgba(201, 168, 108, 0.1);
+  }
+
+  .glass-dark {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .hud-border {
+    position: relative;
+  }
+
+  .hud-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+  }
+
+  .hud-border::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-bottom: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+  }
+}
