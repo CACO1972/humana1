@@ -30,7 +30,8 @@ import {
   Users,
   TrendingUp,
   Battery,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 
 // --- Configuration & Data ---
@@ -122,100 +123,39 @@ const STATS = [
 // --- Components ---
 
 const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
-  const [progress, setProgress] = useState(0);
-
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 800);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 30);
-    return () => clearInterval(timer);
+    // Safety timeout: if video doesn't end or load, continue after 10s
+    const timer = setTimeout(onComplete, 10000);
+    return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
     <motion.div 
-      exit={{ opacity: 0, scale: 1.1 }}
-      transition={{ duration: 1, ease: "easeInOut" }}
-      className="fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
+      className="fixed inset-0 z-[100] bg-[#020202] flex items-center justify-center overflow-hidden"
     >
-      {/* Background Stars/Video Simulation */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(117,51,204,0.15)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-        
-        {/* Animated Particles */}
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ 
-              x: Math.random() * window.innerWidth, 
-              y: Math.random() * window.innerHeight,
-              opacity: Math.random()
-            }}
-            animate={{ 
-              y: [null, Math.random() * -100],
-              opacity: [0, 1, 0]
-            }}
-            transition={{ 
-              duration: Math.random() * 3 + 2, 
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute w-1 h-1 bg-white rounded-full"
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="mb-12"
-        >
-          <div className="flex items-center gap-6">
-            <HumanaLogo className="w-20 h-20 md:w-24 md:h-24" />
-            <div className="flex flex-col">
-              <span className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">Humana.AI</span>
-              <span className="text-[10px] md:text-[12px] text-indigo-velvet-400 font-black tracking-[0.8em] uppercase mt-2">Inteligencia Clínica</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Progress Bar */}
-        <div className="w-64 h-[2px] bg-white/5 rounded-full overflow-hidden relative">
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            className="absolute inset-y-0 left-0 bg-indigo-velvet-500 shadow-[0_0_15px_rgba(117,51,204,0.8)]"
-          />
-        </div>
-        
-        <div className="mt-4 flex flex-col items-center gap-2">
-          <div className="text-[9px] font-mono text-white/20 tracking-[0.4em] uppercase">
-            Initializing_Ecosystem_v2.4
-          </div>
-          <div className="text-[10px] font-mono text-indigo-velvet-400 font-bold">
-            {progress}%
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Tagline */}
-      <motion.div 
+      <video 
+        autoPlay 
+        muted 
+        playsInline 
+        onEnded={onComplete}
+        onError={onComplete}
+        className="w-full h-full object-cover md:object-contain"
+      >
+        <source src="https://storage.googleapis.com/aistudio-assets/humana-splash-v2.mp4" type="video/mp4" />
+      </video>
+      
+      {/* Skip Button */}
+      <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 1 }}
-        className="absolute bottom-12 text-[11px] font-medium text-white/30 italic tracking-widest text-center px-6"
+        transition={{ delay: 2 }}
+        onClick={onComplete}
+        className="absolute bottom-8 right-8 text-[10px] font-black tracking-[0.4em] text-white/40 uppercase hover:text-white transition-colors z-[110] bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10"
       >
-        Ecosistema dental inteligente · Claridad clínica que genera confianza
-      </motion.div>
+        Saltar Intro
+      </motion.button>
     </motion.div>
   );
 };
@@ -245,57 +185,277 @@ const VisionHeader = () => (
       <strong className="font-black text-white">trata caro y previene poco.</strong>
     </motion.h2>
     
+    <motion.div 
+      animate={{ y: [0, 10, 0] }}
+      transition={{ duration: 2, repeat: Infinity }}
+      className="absolute bottom-12 left-1/2 w-[1px] h-12 bg-gradient-to-b from-blue-500/50 to-transparent" 
+    />
+  </section>
+);
+
+const StatementSection = () => (
+  <section className="min-h-screen flex flex-col justify-center items-center px-6 relative z-20">
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.4 }}
-      className="mt-16 p-12 border border-blue-500/30 rounded-lg relative group"
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: false, margin: "-100px" }}
+      className="p-8 md:p-16 border border-blue-500/30 rounded-2xl relative group max-w-4xl bg-blue-500/5 backdrop-blur-sm"
     >
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#020202] px-4 text-[8px] font-black tracking-[0.4em] text-blue-500/50 uppercase">
         Core Statement
       </div>
-      <p className="text-xl md:text-2xl text-white/60 font-light italic font-display leading-relaxed max-w-3xl">
+      <p className="text-xl md:text-3xl text-white/80 font-light italic font-display leading-relaxed text-center">
         Cuando un paciente recibe un diagnóstico claro, lo entiende.<br />
         Cuando entiende, confía.<br />
         Cuando confía, se atiende.<br />
-        <span className="text-white font-bold not-italic">Eso es HUMANA.AI. Claridad clínica que genera confianza.</span>
+        <span className="text-white font-bold not-italic block mt-8">Eso es HUMANA.AI. Claridad clínica que genera confianza.</span>
       </p>
-      <div className="mt-8 flex flex-col items-center md:items-end w-full max-w-3xl">
+      
+      <div className="mt-12 flex flex-col items-center md:items-end w-full">
         <div className="h-[1px] w-12 bg-blue-500/30 mb-4" />
-        <div className="text-[10px] font-black tracking-[0.2em] text-white/80 uppercase">
+        <div className="text-[12px] font-black tracking-[0.2em] text-white/90 uppercase">
           Dr. Carlos Montoya
         </div>
-        <div className="text-[9px] font-medium text-white/40 tracking-wider mt-1">
+        <div className="text-[10px] font-medium text-white/40 tracking-wider mt-1">
           Director Clínica Miró y Desarrollador de Humana.AI
         </div>
       </div>
     </motion.div>
 
-    <div className="flex gap-6 mt-16">
+    <div className="flex flex-wrap justify-center gap-4 md:gap-8 mt-20">
       {['Social', 'Comercial', 'Educativa'].map((label, i) => (
         <motion.button 
           key={label}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 + (i * 0.1) }}
-          whileHover={{ backgroundColor: 'rgba(255,255,255,0.1)', scale: 1.05 }}
-          className="px-10 py-3 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.3em] text-white/60 transition-all"
+          transition={{ delay: 0.2 + (i * 0.1) }}
+          className="px-8 md:px-12 py-3 md:py-4 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[12px] font-black uppercase tracking-[0.3em] text-white/60 hover:bg-white/10 hover:text-white transition-all"
         >
           {label}
         </motion.button>
       ))}
     </div>
-    
-    <motion.div 
-      animate={{ height: [0, 48, 0] }}
-      transition={{ duration: 2, repeat: Infinity }}
-      className="absolute bottom-12 left-1/2 w-[1px] bg-indigo-velvet-500/50" 
-    />
   </section>
 );
 
+const EcosystemExplorer = () => {
+  const [selectedApp, setSelectedApp] = useState<string | null>('scandent');
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  const apps = [
+    {
+      id: 'scandent',
+      name: 'Scandent',
+      tag: 'Visión Artificial',
+      dist: '0.4 AU',
+      color: '#818cf8',
+      texture: 'https://storage.googleapis.com/aistudio-assets/scandent-texture.jpg',
+      desc: 'Detección automatizada de patologías mediante redes neuronales convolucionales.',
+      longDesc: 'Scandent es el pilar de diagnóstico de Humana.AI. Utiliza algoritmos de visión artificial entrenados en miles de radiografías para detectar caries, pérdida ósea y lesiones periapicales con una precisión superior al 95%.',
+      image: 'https://picsum.photos/seed/scandent/800/450'
+    },
+    {
+      id: 'implantx',
+      name: 'ImplantX',
+      tag: 'Cirugía Guiada',
+      dist: '0.7 AU',
+      color: '#10b981',
+      texture: 'https://storage.googleapis.com/aistudio-assets/implantx-texture.jpg',
+      desc: 'Planificación quirúrgica de implantes con precisión sub-milimétrica.',
+      longDesc: 'ImplantX permite a los cirujanos planificar procedimientos complejos en un entorno 3D, generando guías quirúrgicas personalizadas que reducen el tiempo de sillón y mejoran el postoperatorio del paciente.',
+      image: 'https://picsum.photos/seed/implantx/800/450'
+    },
+    {
+      id: 'simetria',
+      name: 'Simetria',
+      tag: 'Estética Digital',
+      dist: '1.0 AU',
+      color: '#f43f5e',
+      texture: 'https://storage.googleapis.com/aistudio-assets/simetria-texture.jpg',
+      desc: 'Diseño de sonrisa asistido por IA para resultados predecibles.',
+      longDesc: 'Simetria analiza las proporciones faciales del paciente para proponer diseños de sonrisa que no solo son estéticamente perfectos, sino funcionalmente viables, integrándose directamente con laboratorios digitales.',
+      image: 'https://picsum.photos/seed/simetria/800/450'
+    },
+    {
+      id: 'copilot',
+      name: 'Copilot C3',
+      tag: 'Asistente Clínico',
+      dist: '1.5 AU',
+      color: '#8b5cf6',
+      texture: 'https://storage.googleapis.com/aistudio-assets/copilot-texture.jpg',
+      desc: 'Toma de decisiones asistida por LLMs especializados en odontología.',
+      longDesc: 'Copilot C3 actúa como un consultor experto disponible 24/7. Analiza el historial del paciente y sugiere protocolos de tratamiento basados en la evidencia científica más reciente.',
+      image: 'https://picsum.photos/seed/copilot/800/450'
+    },
+    {
+      id: 'zerocaries',
+      name: 'ZeroCaries',
+      tag: 'Prevención IA',
+      dist: '5.2 AU',
+      color: '#0ea5e9',
+      texture: 'https://storage.googleapis.com/aistudio-assets/zerocaries-texture.jpg',
+      desc: 'Monitoreo preventivo y educación del paciente mediante escaneo móvil.',
+      longDesc: 'ZeroCaries democratiza la prevención. Permite a los pacientes realizar seguimientos desde su hogar, alertando al dentista ante cualquier cambio sospechoso antes de que se convierta en un problema grave.',
+      image: 'https://picsum.photos/seed/zerocaries/800/450'
+    }
+  ];
+
+  const currentApp = apps.find(a => a.id === selectedApp) || apps[0];
+
+  return (
+    <section className="relative h-screen bg-black overflow-hidden font-sans border-t border-white/5">
+      <div className="absolute top-12 left-0 right-0 z-20 text-center">
+        <h2 className="text-white text-xs font-black uppercase tracking-[0.8em] opacity-40">Ecosystem Explorer</h2>
+        <div className="text-indigo-velvet-400 text-[10px] font-bold uppercase tracking-widest mt-2">Humana.AI Universe</div>
+      </div>
+
+      {/* Menu Side */}
+      <div className="absolute left-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-4">
+        {apps.map((app, idx) => (
+          <button
+            key={app.id}
+            onClick={() => setSelectedApp(app.id)}
+            className={`group flex items-center gap-4 transition-all duration-500 ${selectedApp === app.id ? 'opacity-100' : 'opacity-30 hover:opacity-60'}`}
+          >
+            <div 
+              className="w-8 h-8 rounded-full border border-white/20 shadow-inner overflow-hidden relative"
+              style={{ boxShadow: `inset 0 -10px 10px rgba(0,0,0,0.8), 0 0 15px ${app.color}44` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                {selectedApp === app.id && <motion.div layoutId="pip" className="w-4 h-[2px]" style={{ backgroundColor: app.color }} />}
+                <span className="text-white text-[10px] font-black uppercase tracking-widest">{app.name}</span>
+              </div>
+              <div className="text-[8px] text-white/40 uppercase tracking-tighter">{app.dist}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* 3D Scene Container */}
+      <div className="absolute inset-0 flex items-center justify-center perspective-[1000px]">
+        <div className="relative w-full h-full preserve-3d rotate-x-[15deg]">
+          {apps.map((app, idx) => {
+            const isSelected = selectedApp === app.id;
+            const offset = apps.findIndex(a => a.id === selectedApp) - idx;
+            
+            return (
+              <motion.div
+                key={app.id}
+                initial={false}
+                animate={{
+                  z: offset * -1200,
+                  opacity: 1 - Math.abs(offset) * 0.4,
+                  display: Math.abs(offset) > 2 ? 'none' : 'block'
+                }}
+                transition={{ duration: 1.5, ease: [0.33, 0, 0, 1] }}
+                className="absolute inset-0 flex flex-col items-center justify-end pb-[10vh] pointer-events-none"
+              >
+                {/* The "Planet" */}
+                <motion.div 
+                  animate={{ rotateY: 360 }}
+                  transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+                  className="w-[800px] h-[800px] rounded-full relative"
+                  style={{ 
+                    background: `url(${app.image})`,
+                    backgroundSize: 'cover',
+                    boxShadow: `inset 0 -200px 100px rgba(0,0,0,0.9), inset 0 0 100px ${app.color}44, 0 20px 100px rgba(0,0,0,0.5)`
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-full shadow-[inset_0_40px_80px_rgba(255,255,255,0.1)]" />
+                </motion.div>
+
+                {/* Description */}
+                <motion.div 
+                  animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 50 }}
+                  className="mt-12 text-center max-w-xl px-6"
+                >
+                  <h3 className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.6em] mb-4">{app.tag}</h3>
+                  <h1 className="text-white text-6xl font-black uppercase tracking-tighter mb-6">{app.name}</h1>
+                  <p className="text-white/40 text-sm font-medium leading-relaxed mb-8">{app.desc}</p>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setIsPanelOpen(true); }}
+                    className="pointer-events-auto text-white text-[10px] font-black uppercase tracking-[0.4em] border-b-2 border-indigo-velvet-500 pb-2 hover:px-4 transition-all"
+                  >
+                    Read More
+                  </button>
+                </motion.div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Side Panel */}
+      <AnimatePresence>
+        {isPanelOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPanelOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60]"
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-[70] p-12 overflow-y-auto"
+            >
+              <button 
+                onClick={() => setIsPanelOpen(false)}
+                className="absolute top-8 right-8 text-black/20 hover:text-black transition-colors"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              
+              <div className="mt-12">
+                <h1 className="text-black text-4xl font-black uppercase tracking-tighter mb-2">{currentApp.name}</h1>
+                <div className="w-12 h-1 bg-black mb-8" />
+                
+                <img src={currentApp.image} className="w-full aspect-video object-cover rounded-xl mb-8" />
+                
+                <h2 className="text-black text-xs font-black uppercase tracking-widest mb-4">Visión General</h2>
+                <p className="text-black/60 text-sm leading-relaxed mb-8">{currentApp.longDesc}</p>
+                
+                <h2 className="text-black text-xs font-black uppercase tracking-widest mb-4">Especificaciones</h2>
+                <div className="space-y-4">
+                  <div className="flex justify-between border-b border-black/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-black/40">Precisión</span>
+                    <span className="text-[10px] font-black uppercase text-black">98.4%</span>
+                  </div>
+                  <div className="flex justify-between border-b border-black/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-black/40">Latencia</span>
+                    <span className="text-[10px] font-black uppercase text-black">{'<'} 200ms</span>
+                  </div>
+                  <div className="flex justify-between border-b border-black/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-black/40">Protocolo</span>
+                    <span className="text-[10px] font-black uppercase text-black">Encrypted_V2</span>
+                  </div>
+                </div>
+
+                <button className="w-full mt-12 bg-black text-white py-6 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-velvet-600 transition-colors">
+                  Launch Application
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .preserve-3d { transform-style: preserve-3d; }
+      `}</style>
+    </section>
+  );
+};
+
 const VisionPillar = ({ num, tag, word, headline, body, actors, colorClass }: any) => (
-  <section className="min-h-screen flex items-center py-20 md:py-40 px-6 md:px-12 border-b border-white/5">
+  <section className="py-16 md:py-20 px-6 md:px-12 border-b border-white/5">
     <div className="max-w-[1200px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-12 md:gap-24 items-start">
       <div className="lg:sticky lg:top-40">
         <div className="text-[10px] font-black text-white/10 tracking-[0.4em] mb-4 md:mb-8">{num}</div>
@@ -313,13 +473,24 @@ const VisionPillar = ({ num, tag, word, headline, body, actors, colorClass }: an
           {headline.split('<em>').map((part: string, i: number) => i === 1 ? <em key={i} className="not-italic text-white/30 font-light">{part.replace('</em>', '')}</em> : part)}
         </h3>
         <p className="text-lg md:text-xl text-white/40 font-medium leading-relaxed mb-8 md:mb-12" dangerouslySetInnerHTML={{ __html: body }} />
+        
         {actors && (
-          <div className="flex flex-wrap gap-2 md:gap-3">
-            {actors.map((actor: string) => (
-              <span key={actor} className="px-3 md:px-4 py-1 md:py-1.5 rounded-full border border-blue-500/10 bg-blue-500/5 text-[8px] md:text-[10px] font-medium text-blue-400/60 uppercase tracking-wider">
-                {actor}
-              </span>
-            ))}
+          <div className={typeof actors[0] === 'object' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-wrap gap-2 md:gap-3"}>
+            {actors.map((actor: any, i: number) => {
+              if (typeof actor === 'object') {
+                return (
+                  <div key={actor.who || i} className="bg-white/5 border border-white/10 rounded-[32px] p-8 md:p-10 hover:bg-white/[0.07] transition-colors group">
+                    <div className={`text-[10px] font-black uppercase tracking-widest mb-6 ${actor.color}`}>{actor.who}</div>
+                    <p className="text-white/60 text-sm md:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: actor.text }} />
+                  </div>
+                );
+              }
+              return (
+                <span key={actor} className="px-3 md:px-4 py-1 md:py-1.5 rounded-full border border-blue-500/10 bg-blue-500/5 text-[8px] md:text-[10px] font-medium text-blue-400/60 uppercase tracking-wider">
+                  {actor}
+                </span>
+              );
+            })}
           </div>
         )}
       </motion.div>
@@ -328,10 +499,10 @@ const VisionPillar = ({ num, tag, word, headline, body, actors, colorClass }: an
 );
 
 const WinWinSection = () => (
-  <section className="py-60 px-12 border-b border-white/5">
+  <section className="py-12 md:py-16 px-12 border-b border-white/5">
     <div className="max-w-[1200px] mx-auto text-center">
       <div className="text-[10px] font-black tracking-[0.6em] text-indigo-velvet-400 uppercase mb-12">Quién gana</div>
-      <h2 className="text-6xl md:text-7xl font-light tracking-tighter mb-32 text-white/90">
+      <h2 className="text-6xl md:text-7xl font-light tracking-tighter mb-16 text-white/90">
         Cuando la información mejora, <br />
         <strong className="font-black text-white">ganan todos.</strong>
       </h2>
@@ -473,7 +644,7 @@ const AudiencePortals = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mt-24">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mt-12">
       {portals.map((portal) => (
         <motion.div
           key={portal.id}
@@ -567,10 +738,15 @@ const IndiceMiroFormula = () => {
 
 const HUDOverlay = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const [nodes, setNodes] = useState(142);
   
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
-    return () => clearInterval(timer);
+    const nodeTimer = setInterval(() => setNodes(prev => prev + (Math.random() > 0.7 ? 1 : 0)), 5000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(nodeTimer);
+    };
   }, []);
 
   return (
@@ -578,16 +754,19 @@ const HUDOverlay = () => {
       <div className="flex justify-between items-start">
         <div className="flex flex-col gap-1 md:gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-emerald-500/50">SYSTEM_ONLINE</span>
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+            <span className="text-emerald-500 font-bold">HUMANA_LIVE_NETWORK</span>
           </div>
-          <div className="hidden xs:block">HUMANA_CORE_V2.4.0</div>
-          <div className="hidden sm:block">LOC: SANTIAGO_CHILE</div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/40">ACTIVE_NODES:</span>
+            <span className="text-white/60 font-bold">{nodes}</span>
+          </div>
+          <div className="hidden sm:block text-indigo-velvet-400/40">SANTIAGO_HUB_PRIMARY</div>
         </div>
         <div className="flex items-center gap-4 md:gap-6">
-          <div className="hidden sm:flex items-center gap-2">
-            <Wifi className="w-3 h-3" />
-            <span>ENCRYPTED_LINK</span>
+          <div className="hidden sm:flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+            <Wifi className="w-3 h-3 text-emerald-500" />
+            <span className="text-emerald-500/60">SIGNAL_STABLE</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
@@ -598,22 +777,25 @@ const HUDOverlay = () => {
       
       <div className="flex justify-between items-end">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-indigo-velvet-400/60">
             <Lock className="w-3 h-3" />
-            <span className="hidden xs:block">SECURE_PROTOCOL_ACTIVE</span>
+            <span className="hidden xs:block">AES_256_ENCRYPTION_ACTIVE</span>
           </div>
-          <div className="text-[7px] md:text-[10px]">© 2026 HUMANA.AI_ECOSYSTEM</div>
+          <div className="text-[7px] md:text-[10px] opacity-40">LAUNCH_PHASE_01 // GLOBAL_DEPLOYMENT</div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-end">
-            <span className="hidden sm:block">DATA_STREAM</span>
-            <div className="flex gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
+            <span className="text-[7px] mb-1 opacity-30">CORE_LOAD</span>
+            <div className="flex gap-1">
+              {[...Array(8)].map((_, i) => (
                 <motion.div 
                   key={i}
-                  animate={{ height: [2, 8, 2] }}
-                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
-                  className="w-[1.5px] md:w-[2px] bg-white/20"
+                  animate={{ 
+                    height: [4, Math.random() * 15 + 5, 4],
+                    backgroundColor: i > 5 ? 'rgba(117, 51, 204, 0.5)' : 'rgba(255, 255, 255, 0.2)'
+                  }}
+                  transition={{ duration: 0.5 + Math.random(), repeat: Infinity }}
+                  className="w-[2px] rounded-full"
                 />
               ))}
             </div>
@@ -627,15 +809,21 @@ const HUDOverlay = () => {
 const DiagnosticDetails = () => {
   return (
     <div className="flex flex-wrap gap-4 mt-12">
-      <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-md group/stat hover:border-emerald-500/30 transition-colors">
-        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+      <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-md group/stat hover:border-emerald-500/30 transition-all duration-500">
+        <div className="relative">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <div className="absolute inset-0 bg-emerald-500 rounded-full blur-sm animate-ping opacity-50" />
+        </div>
         <div>
           <div className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Caries Detected</div>
           <div className="text-2xl font-black tracking-tighter text-emerald-400">98.4%</div>
         </div>
       </div>
-      <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-md group/stat hover:border-indigo-velvet-500/30 transition-colors">
-        <div className="w-2 h-2 bg-indigo-velvet-500 rounded-full animate-pulse" />
+      <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 backdrop-blur-md group/stat hover:border-indigo-velvet-500/30 transition-all duration-500">
+        <div className="relative">
+          <div className="w-2 h-2 bg-indigo-velvet-500 rounded-full animate-pulse" />
+          <div className="absolute inset-0 bg-indigo-velvet-500 rounded-full blur-sm animate-ping opacity-50" />
+        </div>
         <div>
           <div className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Gingivitis Score</div>
           <div className="text-2xl font-black tracking-tighter text-indigo-velvet-400">72.1%</div>
@@ -944,8 +1132,9 @@ export default function App() {
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-[60] bg-[#020202]/40 backdrop-blur-3xl border-b border-white/5">
-        <div className="max-w-[1800px] mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
+        <div className="max-w-[1800px] mx-auto px-4 md:px-12 h-20 grid grid-cols-3 items-center">
+          {/* Left Side */}
+          <div className="flex items-center gap-4 md:gap-8 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/30">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               <span>System_Online</span>
@@ -953,15 +1142,17 @@ export default function App() {
             <span className="hidden md:block">Loc: Santiago_Chile</span>
           </div>
 
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-4">
-              <HumanaLogo className="w-8 h-8" />
-              <span className="text-2xl font-black tracking-tighter uppercase leading-none">Humana.AI</span>
+          {/* Center - Brand */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center gap-2 md:gap-4">
+              <HumanaLogo className="w-6 h-6 md:w-8 md:h-8" />
+              <span className="text-lg md:text-2xl font-black tracking-tighter uppercase leading-none">Humana.AI</span>
             </div>
-            <span className="text-[8px] text-indigo-velvet-400 font-black tracking-[0.6em] uppercase mt-1">Inteligencia Clínica</span>
+            <span className="text-[6px] md:text-[8px] text-indigo-velvet-400 font-black tracking-[0.4em] md:tracking-[0.6em] uppercase mt-1 text-center">Inteligencia Clínica</span>
           </div>
           
-          <div className="flex items-center gap-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
+          {/* Right Side */}
+          <div className="flex items-center justify-end gap-4 md:gap-8 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/30">
             <div className="hidden lg:flex items-center gap-2">
               <Wifi className="w-3 h-3 text-indigo-velvet-400" />
               <span>Encrypted_Link</span>
@@ -970,7 +1161,7 @@ export default function App() {
               <Clock className="w-3 h-3 text-indigo-velvet-400" />
               <span>11:08:46 A. M.</span>
             </div>
-            <button className="w-10 h-10 bg-indigo-velvet-600/20 text-indigo-velvet-400 rounded-lg border border-indigo-velvet-500/20 flex items-center justify-center hover:bg-indigo-velvet-600 hover:text-white transition-all">
+            <button className="w-8 h-8 md:w-10 md:h-10 bg-indigo-velvet-600/20 text-indigo-velvet-400 rounded-lg border border-indigo-velvet-500/20 flex items-center justify-center hover:bg-indigo-velvet-600 hover:text-white transition-all">
               <Terminal className="w-4 h-4" />
             </button>
           </div>
@@ -980,6 +1171,8 @@ export default function App() {
       <main className="relative z-10">
         
         <VisionHeader />
+
+        <StatementSection />
 
         <VisionPillar 
           num="01 — 03"
@@ -1007,12 +1200,18 @@ export default function App() {
           headline="Formar profesionales <em>que integren datos y criterio clínico.</em>"
           body="Curso de IA en Odontología. Pipeline de talento donde los mejores alumnos acceden al ecosistema. <strong>El objetivo no es reemplazar la experiencia clínica</strong> — es potenciarla con herramientas que antes no existían."
           colorClass="pe"
+          actors={[
+            { who: 'Estudiantes', text: 'Aprenden con herramientas de vanguardia, preparándose para una odontología digital y basada en datos.', color: 'text-indigo-velvet-400' },
+            { who: 'Academia', text: 'Estandariza criterios de evaluación y diagnóstico, elevando el nivel de la enseñanza clínica.', color: 'text-white/40' }
+          ]}
         />
+
+        <EcosystemExplorer />
 
         <WinWinSection />
 
         {/* Hero Section - Segmented Entry */}
-        <section className="relative min-h-screen flex flex-col justify-center items-center px-6 pt-32 pb-20 overflow-hidden">
+        <section className="relative flex flex-col justify-center items-center px-6 pt-20 pb-0 overflow-hidden">
           <HeroVideoBackground src="https://storage.googleapis.com/aistudio-assets/hero-dentists.mp4" />
           
           <motion.div 
@@ -1024,7 +1223,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.2 }}
-              className="flex items-center gap-4 mb-12"
+              className="flex items-center gap-4 mb-6"
             >
               <div className="text-[11px] font-bold text-white/30 uppercase tracking-[0.4em]">
                 HUMANA.AI
@@ -1035,7 +1234,7 @@ export default function App() {
               </div>
             </motion.div>
 
-            <h1 className="text-[12vw] md:text-[8vw] font-black leading-[0.85] tracking-tighter uppercase mb-12 text-balance">
+            <h1 className="text-[12vw] md:text-[8vw] font-black leading-[0.85] tracking-tighter uppercase mb-6 text-balance">
               <motion.span 
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -1058,7 +1257,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 1 }}
-              className="text-xl md:text-2xl text-white/40 font-medium max-w-3xl mb-16 leading-relaxed"
+              className="text-xl md:text-2xl text-white/40 font-medium max-w-3xl mb-8 leading-relaxed"
             >
               Donde la <span className="text-white/80">ética clínica</span> y la <span className="text-white/80">rentabilidad</span> convergen para democratizar el acceso a diagnósticos de élite.
             </motion.p>
@@ -1070,7 +1269,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 2 }}
-              className="mt-24 flex flex-col items-center gap-4"
+              className="mt-4 flex flex-col items-center gap-2"
             >
               <div className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20">Explore Ecosystem</div>
               <motion.div 
@@ -1083,7 +1282,7 @@ export default function App() {
         </section>
 
         {/* Bento Ecosystem - Overjet Style */}
-        <section id="ecosistema" className="py-20 md:py-60 px-6 md:px-12">
+        <section id="ecosistema" className="pt-0 pb-12 md:pb-24 px-6 md:px-12">
           <div className="max-w-[1700px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 lg:auto-rows-[450px]">
               
