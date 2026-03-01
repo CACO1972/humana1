@@ -243,88 +243,38 @@ const EcosystemExplorer = () => {
   const [selectedApp, setSelectedApp] = useState<string | null>('scandent');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-  const apps = [
-    {
-      id: 'scandent',
-      name: 'Scandent',
-      tag: 'Visión Artificial',
-      dist: '0.4 AU',
-      color: '#818cf8',
-      texture: 'https://storage.googleapis.com/aistudio-assets/scandent-texture.jpg',
-      desc: 'Detección automatizada de patologías mediante redes neuronales convolucionales.',
-      longDesc: 'Scandent es el pilar de diagnóstico de Humana.AI. Utiliza algoritmos de visión artificial entrenados en miles de radiografías para detectar caries, pérdida ósea y lesiones periapicales con una precisión superior al 95%.',
-      image: 'https://picsum.photos/seed/scandent/800/450'
-    },
-    {
-      id: 'implantx',
-      name: 'ImplantX',
-      tag: 'Cirugía Guiada',
-      dist: '0.7 AU',
-      color: '#10b981',
-      texture: 'https://storage.googleapis.com/aistudio-assets/implantx-texture.jpg',
-      desc: 'Planificación quirúrgica de implantes con precisión sub-milimétrica.',
-      longDesc: 'ImplantX permite a los cirujanos planificar procedimientos complejos en un entorno 3D, generando guías quirúrgicas personalizadas que reducen el tiempo de sillón y mejoran el postoperatorio del paciente.',
-      image: 'https://picsum.photos/seed/implantx/800/450'
-    },
-    {
-      id: 'simetria',
-      name: 'Simetria',
-      tag: 'Estética Digital',
-      dist: '1.0 AU',
-      color: '#f43f5e',
-      texture: 'https://storage.googleapis.com/aistudio-assets/simetria-texture.jpg',
-      desc: 'Diseño de sonrisa asistido por IA para resultados predecibles.',
-      longDesc: 'Simetria analiza las proporciones faciales del paciente para proponer diseños de sonrisa que no solo son estéticamente perfectos, sino funcionalmente viables, integrándose directamente con laboratorios digitales.',
-      image: 'https://picsum.photos/seed/simetria/800/450'
-    },
-    {
-      id: 'copilot',
-      name: 'Copilot C3',
-      tag: 'Asistente Clínico',
-      dist: '1.5 AU',
-      color: '#8b5cf6',
-      texture: 'https://storage.googleapis.com/aistudio-assets/copilot-texture.jpg',
-      desc: 'Toma de decisiones asistida por LLMs especializados en odontología.',
-      longDesc: 'Copilot C3 actúa como un consultor experto disponible 24/7. Analiza el historial del paciente y sugiere protocolos de tratamiento basados en la evidencia científica más reciente.',
-      image: 'https://picsum.photos/seed/copilot/800/450'
-    },
-    {
-      id: 'zerocaries',
-      name: 'ZeroCaries',
-      tag: 'Prevención IA',
-      dist: '5.2 AU',
-      color: '#0ea5e9',
-      texture: 'https://storage.googleapis.com/aistudio-assets/zerocaries-texture.jpg',
-      desc: 'Monitoreo preventivo y educación del paciente mediante escaneo móvil.',
-      longDesc: 'ZeroCaries democratiza la prevención. Permite a los pacientes realizar seguimientos desde su hogar, alertando al dentista ante cualquier cambio sospechoso antes de que se convierta en un problema grave.',
-      image: 'https://picsum.photos/seed/zerocaries/800/450'
-    }
-  ];
+  const apps = APPS.map(app => ({
+    ...app,
+    tag: app.tags[0],
+    dist: `${(Math.random() * 2 + 0.1).toFixed(1)} AU`,
+    image: `https://picsum.photos/seed/${app.id}-ui/1200/800`,
+    longDesc: app.desc + " Esta aplicación forma parte integral del ecosistema Humana.AI, permitiendo una integración fluida de datos clínicos para mejorar la precisión diagnóstica y la eficiencia operativa en clínicas dentales modernas."
+  }));
 
   const currentApp = apps.find(a => a.id === selectedApp) || apps[0];
 
   return (
-    <section className="relative h-screen bg-black overflow-hidden font-sans border-t border-white/5">
+    <div className="relative w-full h-[80vh] md:h-screen bg-black overflow-hidden font-sans mt-12 mb-24 rounded-[40px] md:rounded-[80px] border border-white/5">
       <div className="absolute top-12 left-0 right-0 z-20 text-center">
         <h2 className="text-white text-xs font-black uppercase tracking-[0.8em] opacity-40">Ecosystem Explorer</h2>
         <div className="text-indigo-velvet-400 text-[10px] font-bold uppercase tracking-widest mt-2">Humana.AI Universe</div>
       </div>
 
       {/* Menu Side */}
-      <div className="absolute left-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-4">
-        {apps.map((app, idx) => (
+      <div className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3 md:gap-4">
+        {apps.map((app) => (
           <button
             key={app.id}
             onClick={() => setSelectedApp(app.id)}
             className={`group flex items-center gap-4 transition-all duration-500 ${selectedApp === app.id ? 'opacity-100' : 'opacity-30 hover:opacity-60'}`}
           >
             <div 
-              className="w-8 h-8 rounded-full border border-white/20 shadow-inner overflow-hidden relative"
+              className="w-6 h-6 md:w-10 md:h-10 rounded-full border border-white/20 shadow-inner overflow-hidden relative"
               style={{ boxShadow: `inset 0 -10px 10px rgba(0,0,0,0.8), 0 0 15px ${app.color}44` }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
             </div>
-            <div className="text-left">
+            <div className="text-left hidden sm:block">
               <div className="flex items-center gap-2">
                 {selectedApp === app.id && <motion.div layoutId="pip" className="w-4 h-[2px]" style={{ backgroundColor: app.color }} />}
                 <span className="text-white text-[10px] font-black uppercase tracking-widest">{app.name}</span>
@@ -354,33 +304,34 @@ const EcosystemExplorer = () => {
                 transition={{ duration: 1.5, ease: [0.33, 0, 0, 1] }}
                 className="absolute inset-0 flex flex-col items-center justify-end pb-[10vh] pointer-events-none"
               >
-                {/* The "Planet" */}
+                {/* The "Planet" - Now an App Screenshot */}
                 <motion.div 
-                  animate={{ rotateY: 360 }}
-                  transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                  className="w-[800px] h-[800px] rounded-full relative"
+                  animate={{ rotateY: isSelected ? 0 : 360 }}
+                  transition={{ duration: isSelected ? 0 : 60, repeat: isSelected ? 0 : Infinity, ease: "linear" }}
+                  className="w-[300px] h-[200px] md:w-[800px] md:h-[500px] rounded-[20px] md:rounded-[40px] relative overflow-hidden border border-white/10"
                   style={{ 
                     background: `url(${app.image})`,
                     backgroundSize: 'cover',
-                    boxShadow: `inset 0 -200px 100px rgba(0,0,0,0.9), inset 0 0 100px ${app.color}44, 0 20px 100px rgba(0,0,0,0.5)`
+                    boxShadow: `0 20px 100px rgba(0,0,0,0.8), 0 0 40px ${app.color}22`
                   }}
                 >
-                  <div className="absolute inset-0 rounded-full shadow-[inset_0_40px_80px_rgba(255,255,255,0.1)]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute inset-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" />
                 </motion.div>
 
                 {/* Description */}
                 <motion.div 
                   animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 50 }}
-                  className="mt-12 text-center max-w-xl px-6"
+                  className="mt-8 md:mt-12 text-center max-w-xl px-6"
                 >
-                  <h3 className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.6em] mb-4">{app.tag}</h3>
-                  <h1 className="text-white text-6xl font-black uppercase tracking-tighter mb-6">{app.name}</h1>
-                  <p className="text-white/40 text-sm font-medium leading-relaxed mb-8">{app.desc}</p>
+                  <h3 className="text-indigo-velvet-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.6em] mb-2 md:mb-4">{app.tag}</h3>
+                  <h1 className="text-white text-3xl md:text-6xl font-black uppercase tracking-tighter mb-4 md:mb-6">{app.name}</h1>
+                  <p className="text-white/40 text-xs md:text-sm font-medium leading-relaxed mb-6 md:mb-8 line-clamp-2 md:line-clamp-none">{app.desc}</p>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setIsPanelOpen(true); }}
-                    className="pointer-events-auto text-white text-[10px] font-black uppercase tracking-[0.4em] border-b-2 border-indigo-velvet-500 pb-2 hover:px-4 transition-all"
+                    className="pointer-events-auto text-white text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] border-b-2 border-indigo-velvet-500 pb-2 hover:px-4 transition-all"
                   >
-                    Read More
+                    Launch App
                   </button>
                 </motion.div>
               </motion.div>
@@ -398,49 +349,67 @@ const EcosystemExplorer = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsPanelOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100]"
             />
             <motion.div 
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-[70] p-12 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#050505] border-l border-white/10 z-[110] p-8 md:p-12 overflow-y-auto"
             >
               <button 
                 onClick={() => setIsPanelOpen(false)}
-                className="absolute top-8 right-8 text-black/20 hover:text-black transition-colors"
+                className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors"
               >
                 <X className="w-8 h-8" />
               </button>
               
               <div className="mt-12">
-                <h1 className="text-black text-4xl font-black uppercase tracking-tighter mb-2">{currentApp.name}</h1>
-                <div className="w-12 h-1 bg-black mb-8" />
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white">
+                    {currentApp.icon}
+                  </div>
+                  <div>
+                    <h1 className="text-white text-3xl font-black uppercase tracking-tighter">{currentApp.name}</h1>
+                    <div className="text-[10px] font-black text-indigo-velvet-400 uppercase tracking-widest">{currentApp.status}</div>
+                  </div>
+                </div>
                 
-                <img src={currentApp.image} className="w-full aspect-video object-cover rounded-xl mb-8" />
+                <div className="w-12 h-1 bg-indigo-velvet-500 mb-8" />
                 
-                <h2 className="text-black text-xs font-black uppercase tracking-widest mb-4">Visión General</h2>
-                <p className="text-black/60 text-sm leading-relaxed mb-8">{currentApp.longDesc}</p>
+                <img src={currentApp.image} className="w-full aspect-video object-cover rounded-2xl mb-8 border border-white/10" />
                 
-                <h2 className="text-black text-xs font-black uppercase tracking-widest mb-4">Especificaciones</h2>
+                <h2 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 opacity-40">Visión General</h2>
+                <p className="text-white/60 text-sm leading-relaxed mb-8">{currentApp.longDesc}</p>
+                
+                <h2 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 opacity-40">Especificaciones</h2>
                 <div className="space-y-4">
-                  <div className="flex justify-between border-b border-black/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-black/40">Precisión</span>
-                    <span className="text-[10px] font-black uppercase text-black">98.4%</span>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-white/30">Tags</span>
+                    <div className="flex gap-2">
+                      {currentApp.tags.map(tag => (
+                        <span key={tag} className="text-[8px] font-black uppercase text-indigo-velvet-400">{tag}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-between border-b border-black/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-black/40">Latencia</span>
-                    <span className="text-[10px] font-black uppercase text-black">{'<'} 200ms</span>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-white/30">Latencia</span>
+                    <span className="text-[10px] font-black uppercase text-white">{'<'} 200ms</span>
                   </div>
-                  <div className="flex justify-between border-b border-black/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-black/40">Protocolo</span>
-                    <span className="text-[10px] font-black uppercase text-black">Encrypted_V2</span>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase text-white/30">Protocolo</span>
+                    <span className="text-[10px] font-black uppercase text-white">Encrypted_V2</span>
                   </div>
                 </div>
 
-                <button className="w-full mt-12 bg-black text-white py-6 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-velvet-600 transition-colors">
+                <a 
+                  href={currentApp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full mt-12 bg-indigo-velvet-600 text-white py-6 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-velvet-500 transition-colors text-center"
+                >
                   Launch Application
-                </button>
+                </a>
               </div>
             </motion.div>
           </>
@@ -450,7 +419,7 @@ const EcosystemExplorer = () => {
       <style>{`
         .preserve-3d { transform-style: preserve-3d; }
       `}</style>
-    </section>
+    </div>
   );
 };
 
@@ -475,19 +444,19 @@ const VisionPillar = ({ num, tag, word, headline, body, actors, colorClass }: an
         <p className="text-lg md:text-xl text-white/40 font-medium leading-relaxed mb-8 md:mb-12" dangerouslySetInnerHTML={{ __html: body }} />
         
         {actors && (
-          <div className={typeof actors[0] === 'object' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-wrap gap-2 md:gap-3"}>
+          <div className={(actors[0] && typeof actors[0] === 'object') ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-wrap gap-2 md:gap-3"}>
             {actors.map((actor: any, i: number) => {
-              if (typeof actor === 'object') {
+              if (actor && typeof actor === 'object' && 'who' in actor) {
                 return (
                   <div key={actor.who || i} className="bg-white/5 border border-white/10 rounded-[32px] p-8 md:p-10 hover:bg-white/[0.07] transition-colors group">
-                    <div className={`text-[10px] font-black uppercase tracking-widest mb-6 ${actor.color}`}>{actor.who}</div>
-                    <p className="text-white/60 text-sm md:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: actor.text }} />
+                    <div className={`text-[10px] font-black uppercase tracking-widest mb-6 ${actor.color || ''}`}>{actor.who}</div>
+                    <p className="text-white/60 text-sm md:text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: actor.text || '' }} />
                   </div>
                 );
               }
               return (
-                <span key={actor} className="px-3 md:px-4 py-1 md:py-1.5 rounded-full border border-blue-500/10 bg-blue-500/5 text-[8px] md:text-[10px] font-medium text-blue-400/60 uppercase tracking-wider">
-                  {actor}
+                <span key={typeof actor === 'string' ? actor : i} className="px-3 md:px-4 py-1 md:py-1.5 rounded-full border border-blue-500/10 bg-blue-500/5 text-[8px] md:text-[10px] font-medium text-blue-400/60 uppercase tracking-wider">
+                  {String(actor)}
                 </span>
               );
             })}
@@ -1206,8 +1175,6 @@ export default function App() {
           ]}
         />
 
-        <EcosystemExplorer />
-
         <WinWinSection />
 
         {/* Hero Section - Segmented Entry */}
@@ -1261,6 +1228,8 @@ export default function App() {
             >
               Donde la <span className="text-white/80">ética clínica</span> y la <span className="text-white/80">rentabilidad</span> convergen para democratizar el acceso a diagnósticos de élite.
             </motion.p>
+
+            <EcosystemExplorer />
 
             <AudiencePortals />
 
