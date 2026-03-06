@@ -31,8 +31,27 @@ import {
   TrendingUp,
   Battery,
   Clock,
-  X
+  X,
+  Mic,
+  FileText,
+  Share2,
+  MessageSquare,
+  CheckCircle2
 } from 'lucide-react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { 
+  OrbitControls, 
+  PerspectiveCamera, 
+  Float, 
+  MeshDistortMaterial, 
+  MeshWobbleMaterial,
+  Text,
+  Environment,
+  PresentationControls,
+  ContactShadows,
+  useGLTF
+} from '@react-three/drei';
+import * as THREE from 'three';
 
 // --- Configuration & Data ---
 
@@ -40,6 +59,7 @@ const APPS = [
   {
     id: 'scandent',
     name: 'SCANDENT',
+    tagline: 'Visión Artificial de Vanguardia',
     icon: <Scan className="w-8 h-8" />,
     status: 'LIVE',
     desc: 'Pre-diagnóstico dental desde fotografía. Detección de caries y gingivitis con YOLOv7.',
@@ -52,6 +72,7 @@ const APPS = [
   {
     id: 'implantx',
     name: 'ImplantX',
+    tagline: 'Evaluación Predictiva con IA',
     icon: <Activity className="w-8 h-8" />,
     status: 'LIVE | IP PROTECTED',
     desc: 'Algoritmo sinérgico (Safe Creative #2510073245348) que predice el fracaso implantario con un AUC de 0.891.',
@@ -64,6 +85,7 @@ const APPS = [
   {
     id: 'simetria',
     name: 'ÍNDICE MIRÓ',
+    tagline: 'Belleza Contextual y Armonía',
     icon: <Sparkles className="w-8 h-8" />,
     status: 'LIVE 90%',
     desc: 'Belleza contextual: IM = M × E × C. Matemática, Estética IA y Contexto.',
@@ -76,6 +98,7 @@ const APPS = [
   {
     id: 'copilot',
     name: 'Copilot C3',
+    tagline: 'Asistente Clínico Inteligente',
     icon: <Brain className="w-8 h-8" />,
     status: 'LIVE',
     desc: 'Asistente clínico inteligente integrado con Dentalink.',
@@ -88,6 +111,7 @@ const APPS = [
   {
     id: 'zerocaries',
     name: 'ZeroCaries',
+    tagline: 'Prevención Basada en Datos',
     icon: <ShieldCheck className="w-8 h-8" />,
     status: '85%',
     desc: 'Mapa de riesgo cariogénico y protocolos preventivos.',
@@ -100,6 +124,7 @@ const APPS = [
   {
     id: 'armonia',
     name: 'ARMONÍA',
+    tagline: 'Estética Facial Avanzada',
     icon: <Sparkles className="w-8 h-8" />,
     status: 'DEV',
     desc: 'Índice Miró: belleza contextual y armonía facial.',
@@ -160,41 +185,627 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-const VisionHeader = () => (
-  <section className="min-h-screen flex flex-col justify-center items-center text-center px-6 relative">
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center gap-4 mb-12"
-    >
-      <div className="text-[10px] font-black tracking-[0.6em] text-blue-500 uppercase">
-        El Problema
+const HeroExplorer = ({ onLaunch }: { onLaunch: (app: any) => void }) => {
+  const [activeStage, setActiveStage] = useState(0);
+  
+  const stages = [
+    {
+      id: 'scandent',
+      name: 'Objetividad',
+      sub: 'El fin de la duda',
+      color: '#5B8DEF',
+      glow: 'rgba(91,141,239,0.4)',
+      icon: <Scan className="w-full h-full" />,
+      title: 'Diagnóstico basado en datos, no en opiniones.',
+      desc: 'La variabilidad diagnóstica es el mayor reto de la odontología. Scandent utiliza redes neuronales para identificar patologías con una precisión matemática, eliminando la duda del proceso inicial.',
+      features: [
+        'Identificación de patologías asintomáticas',
+        'Estandarización del criterio clínico',
+        'Evidencia visual irrefutable para el paciente'
+      ],
+      modelType: 'knot'
+    },
+    {
+      id: 'odonto',
+      name: 'Eficiencia',
+      sub: 'Atención sin fricción',
+      color: '#C9A86C',
+      glow: 'rgba(201,168,108,0.4)',
+      icon: <Mic className="w-full h-full" />,
+      title: 'Manos libres, mente en el paciente.',
+      desc: 'El registro clínico no debería ser un obstáculo. Nuestra interfaz de voz permite al odontólogo mantener el foco donde importa: en el paciente y en la exploración, no en el teclado.',
+      features: [
+        'Registro en tiempo real sin contaminación cruzada',
+        'Vocabulario clínico especializado en español',
+        'Ahorro del 60% en tiempo de documentación'
+      ],
+      modelType: 'sphere'
+    },
+    {
+      id: 'explica',
+      name: 'Empatía',
+      sub: 'El puente visual',
+      color: '#E8524A',
+      glow: 'rgba(232,82,74,0.35)',
+      icon: <Layers className="w-full h-full" />,
+      title: 'El fin de la "caja negra" clínica.',
+      desc: 'Un paciente que no entiende, no acepta el tratamiento. Explica traduce la complejidad técnica en una narrativa visual sobre la propia anatomía del paciente.',
+      features: [
+        'Realidad aumentada sobre radiografías reales',
+        'Visualización del progreso de la enfermedad',
+        'Empoderamiento del paciente en su salud'
+      ],
+      modelType: 'torus'
+    },
+    {
+      id: 'clarity',
+      name: 'Transparencia',
+      sub: 'Decisiones seguras',
+      color: '#3EBD7A',
+      glow: 'rgba(62,189,122,0.35)',
+      icon: <FileText className="w-full h-full" />,
+      title: 'Transparencia que genera lealtad.',
+      desc: 'La incertidumbre financiera es la principal barrera de abandono. Clarity entrega un plan de acción claro, desglosado y garantizado desde el minuto uno.',
+      features: [
+        'Presupuestos dinámicos y transparentes',
+        'Opciones de financiamiento integradas',
+        'Compromiso de calidad y garantías'
+      ],
+      modelType: 'box'
+    },
+    {
+      id: 'share',
+      name: 'Conexión',
+      sub: 'Salud compartida',
+      color: '#25D366',
+      glow: 'rgba(37,211,102,0.35)',
+      icon: <Share2 className="w-full h-full" />,
+      title: 'La consulta no termina en el box.',
+      desc: 'Llevamos la información al entorno del paciente. Al compartir el diagnóstico por WhatsApp, permitimos que la decisión sea familiar, informada y reflexiva.',
+      features: [
+        'Acceso instantáneo sin aplicaciones externas',
+        'Trazabilidad del interés del paciente',
+        'Fomento de la educación dental familiar'
+      ],
+      modelType: 'octa'
+    }
+  ];
+
+  return (
+    <section className="relative h-screen w-full overflow-hidden bg-[#020202] flex items-center justify-center">
+      {/* Real 3D Background */}
+      <div className="absolute inset-0 z-0">
+        <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }}>
+          <ambientLight intensity={0.5} />
+          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+          <pointLight position={[-10, -10, -10]} intensity={0.5} />
+          
+          <PresentationControls
+            global
+            rotation={[0, 0, 0]}
+            polar={[-Math.PI / 4, Math.PI / 4]}
+            azimuth={[-Math.PI / 4, Math.PI / 4]}
+          >
+            <Hero3DScene activeStage={activeStage} stages={stages} />
+          </PresentationControls>
+          
+          <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={10} blur={2} far={4.5} />
+          <Environment preset="city" />
+        </Canvas>
       </div>
-      <div className="h-[1px] w-12 bg-blue-500/30" />
-      <div className="text-[11px] font-medium text-white/40 italic tracking-wider">
-        Desarrollado por Clínica Miró
+
+      {/* Technical Overlays */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+        <div className="absolute top-12 left-12">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-3 h-3 bg-indigo-velvet-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-black text-white uppercase tracking-[0.5em]">System Online</span>
+          </div>
+          <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest">
+            {`[CORE_ENGINE] > STATUS_OK > LATENCY_12MS`}
+          </div>
+        </div>
+
+        <div className="absolute bottom-12 left-12">
+          <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em] mb-4">Navigation</div>
+          <div className="flex flex-col gap-2">
+            {stages.map((stage, idx) => (
+              <button
+                key={stage.id}
+                onClick={() => setActiveStage(idx)}
+                className={`pointer-events-auto group flex items-center gap-4 transition-all duration-500 ${activeStage === idx ? 'opacity-100' : 'opacity-20 hover:opacity-50'}`}
+              >
+                <div className="w-1 h-8 bg-white/10 relative overflow-hidden">
+                  {activeStage === idx && (
+                    <motion.div 
+                      layoutId="nav-indicator"
+                      className="absolute inset-0"
+                      style={{ backgroundColor: stage.color }}
+                    />
+                  )}
+                </div>
+                <div className="text-left">
+                  <div className="text-white text-[10px] font-black uppercase tracking-widest">{stage.name}</div>
+                  <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest">{stage.sub}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-    </motion.div>
-    <motion.h2 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="text-[8vw] md:text-[5vw] font-light leading-tight tracking-tighter max-w-5xl text-white/90"
-    >
-      La odontología diagnostica tarde, <br />
-      <strong className="font-black text-white">trata caro y previene poco.</strong>
-    </motion.h2>
-    
-    <motion.div 
-      animate={{ y: [0, 10, 0] }}
-      transition={{ duration: 2, repeat: Infinity }}
-      className="absolute bottom-12 left-1/2 w-[1px] h-12 bg-gradient-to-b from-blue-500/50 to-transparent" 
-    />
-  </section>
-);
+
+      {/* Info Panel (Right) */}
+      <div className="absolute right-6 md:right-12 top-1/2 -translate-y-1/2 w-[380px] z-30 hidden lg:block pointer-events-none">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeStage}
+            initial={{ opacity: 0, x: 40, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, x: -40, filter: 'blur(10px)' }}
+            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+            className="pointer-events-auto bg-black/40 backdrop-blur-2xl border border-white/10 p-10 rounded-[40px] shadow-2xl"
+          >
+            <div className="text-[10px] font-black tracking-[0.4em] uppercase mb-6 flex items-center gap-3">
+              <span style={{ color: stages[activeStage].color }}>{String(activeStage + 1).padStart(2, '0')}</span>
+              <span className="w-8 h-[1px] bg-white/10" />
+              <span className="text-white/40">{stages[activeStage].sub}</span>
+            </div>
+            
+            <h1 className="text-4xl font-light text-white leading-tight mb-8">
+              {stages[activeStage].title}
+            </h1>
+            
+            <p className="text-sm text-white/40 font-medium leading-relaxed mb-10">
+              {stages[activeStage].desc}
+            </p>
+            
+            <div className="space-y-4 mb-10">
+              {stages[activeStage].features.map((feat, i) => (
+                <div key={i} className="flex items-start gap-4 group">
+                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 transition-transform group-hover:scale-150" style={{ backgroundColor: stages[activeStage].color }} />
+                  <span className="text-xs text-white/60 leading-relaxed font-medium">{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => {
+                const app = APPS.find(a => a.id === stages[activeStage].id) || APPS[0];
+                onLaunch(app);
+              }}
+              className="w-full py-5 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all flex items-center justify-center gap-3 group overflow-hidden relative"
+              style={{ backgroundColor: stages[activeStage].color, color: '#000' }}
+            >
+              <span className="relative z-10">Launch {stages[activeStage].name}</span>
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform relative z-10" />
+              <motion.div 
+                className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"
+              />
+            </button>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Mobile Title */}
+      <div className="absolute top-24 left-6 right-6 lg:hidden text-center z-20">
+        <h2 className="text-4xl font-black tracking-tighter uppercase text-white mb-2">
+          {stages[activeStage].name}
+        </h2>
+        <p className="text-[10px] font-black tracking-[0.4em] uppercase text-white/40">
+          {stages[activeStage].sub}
+        </p>
+      </div>
+    </section>
+  );
+};
+
+const Hero3DScene = ({ activeStage, stages }: { activeStage: number; stages: any[] }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const stage = stages[activeStage];
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.y = t * 0.2;
+      meshRef.current.rotation.x = Math.sin(t * 0.1) * 0.1;
+      meshRef.current.position.y = Math.sin(t * 0.5) * 0.1;
+    }
+  });
+
+  return (
+    <group>
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <mesh ref={meshRef} castShadow receiveShadow>
+          {stage.modelType === 'knot' && <torusKnotGeometry args={[1, 0.3, 128, 32]} />}
+          {stage.modelType === 'sphere' && <sphereGeometry args={[1.2, 64, 64]} />}
+          {stage.modelType === 'torus' && <torusGeometry args={[1, 0.4, 32, 100]} />}
+          {stage.modelType === 'box' && <boxGeometry args={[1.5, 1.5, 1.5]} />}
+          {stage.modelType === 'octa' && <octahedronGeometry args={[1.5, 0]} />}
+          
+          <MeshDistortMaterial
+            color={stage.color}
+            speed={2}
+            distort={0.3}
+            radius={1}
+            roughness={0.1}
+            metalness={0.8}
+          />
+        </mesh>
+      </Float>
+      
+      {/* Outer Wireframe Shell */}
+      <mesh rotation={[0, 0, 0]}>
+        {stage.modelType === 'knot' && <torusKnotGeometry args={[1.1, 0.31, 128, 32]} />}
+        {stage.modelType === 'sphere' && <sphereGeometry args={[1.3, 32, 32]} />}
+        {stage.modelType === 'torus' && <torusGeometry args={[1.1, 0.41, 32, 100]} />}
+        {stage.modelType === 'box' && <boxGeometry args={[1.6, 1.6, 1.6]} />}
+        {stage.modelType === 'octa' && <octahedronGeometry args={[1.6, 0]} />}
+        <meshStandardMaterial 
+          color={stage.color} 
+          wireframe 
+          transparent 
+          opacity={0.1}
+        />
+      </mesh>
+    </group>
+  );
+};
+
+const DeepScanReveal = () => {
+  return (
+    <section className="py-32 px-6 md:px-12 bg-[#050505] relative overflow-hidden">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <div className="relative h-[600px] bg-white/5 rounded-[60px] border border-white/10 overflow-hidden group">
+            <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-black/40 to-transparent" />
+            
+            <Canvas shadows>
+              <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+              <ambientLight intensity={0.5} />
+              <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+              <pointLight position={[-10, -10, -10]} intensity={0.5} />
+              
+              <PresentationControls
+                global
+                rotation={[0, 0.3, 0]}
+                polar={[-Math.PI / 3, Math.PI / 3]}
+                azimuth={[-Math.PI / 1.4, Math.PI / 1.4]}
+              >
+                <RevealObject />
+              </PresentationControls>
+              
+              <ContactShadows position={[0, -1.5, 0]} opacity={0.4} scale={10} blur={2} far={4.5} />
+              <Environment preset="city" />
+            </Canvas>
+
+            <div className="absolute top-8 left-8 z-20">
+              <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-4 py-2">
+                <div className="w-2 h-2 bg-indigo-velvet-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black text-white uppercase tracking-widest">Deep Scan Active</span>
+              </div>
+            </div>
+
+            <div className="absolute bottom-8 left-8 right-8 z-20 flex justify-between items-end">
+              <div>
+                <div className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Object ID</div>
+                <div className="text-white font-mono text-xs">HMN-SCAN-0924</div>
+              </div>
+              <div className="text-right">
+                <div className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Precision</div>
+                <div className="text-indigo-velvet-400 font-mono text-xs">99.98%</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.6em] mb-8">Tecnología de Revelado</div>
+            <h2 className="text-5xl md:text-7xl font-light text-white tracking-tighter mb-12 leading-tight">
+              Mira lo que <br />
+              <span className="text-white/30 italic">otros no ven.</span>
+            </h2>
+            <p className="text-white/40 text-lg leading-relaxed mb-12 max-w-xl">
+              Nuestra IA no solo analiza la superficie. Utiliza algoritmos de revelado volumétrico para identificar patologías ocultas, fracturas internas y variaciones de densidad ósea que pasan desapercibidas en un examen convencional.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-8">
+              <div className="p-8 bg-white/5 rounded-[32px] border border-white/10">
+                <Cpu className="w-8 h-8 text-indigo-velvet-400 mb-6" />
+                <div className="text-white font-bold mb-2">Revelado Volumétrico</div>
+                <div className="text-white/40 text-xs leading-relaxed">Análisis capa por capa de la estructura dental interna.</div>
+              </div>
+              <div className="p-8 bg-white/5 rounded-[32px] border border-white/10">
+                <Eye className="w-8 h-8 text-indigo-velvet-400 mb-6" />
+                <div className="text-white font-bold mb-2">Visión Predictiva</div>
+                <div className="text-white/40 text-xs leading-relaxed">Identificación de riesgos antes de que se conviertan en problemas.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const RevealObject = () => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.x = Math.cos(t / 4) / 8;
+      meshRef.current.rotation.y = Math.sin(t / 4) / 8;
+      meshRef.current.position.y = (1 + Math.sin(t / 1.5)) / 10;
+      
+      // Reveal effect using clipping planes
+      const planeConstant = Math.sin(t) * 2;
+      const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), planeConstant);
+      
+      if (Array.isArray(meshRef.current.material)) {
+        meshRef.current.material.forEach(m => {
+          m.clippingPlanes = [plane];
+          m.clipShadows = true;
+        });
+      } else {
+        meshRef.current.material.clippingPlanes = [plane];
+        meshRef.current.material.clipShadows = true;
+      }
+    }
+  });
+
+  const { gl } = useThree();
+  useEffect(() => {
+    gl.localClippingEnabled = true;
+  }, [gl]);
+
+  return (
+    <group>
+      {/* Outer Shell */}
+      <mesh ref={meshRef} castShadow receiveShadow onPointerOver={() => setHovered(true)} onPointerOut={() => setHovered(false)}>
+        <torusKnotGeometry args={[1, 0.3, 128, 32]} />
+        <meshStandardMaterial 
+          color={hovered ? "#7533cc" : "#ffffff"} 
+          roughness={0.1} 
+          metalness={0.8}
+          envMapIntensity={2}
+        />
+      </mesh>
+      
+      {/* Inner Core (Always visible or revealed differently) */}
+      <mesh rotation={[0, 0, 0]}>
+        <torusKnotGeometry args={[1, 0.28, 128, 32]} />
+        <meshStandardMaterial 
+          color="#7533cc" 
+          wireframe 
+          transparent 
+          opacity={0.3}
+        />
+      </mesh>
+      
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <MeshDistortMaterial
+            color="#7533cc"
+            speed={5}
+            distort={0.4}
+            radius={1}
+          />
+        </mesh>
+      </Float>
+    </group>
+  );
+};
+
+const FlowDemo = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  const steps = [
+    {
+      num: '01',
+      title: 'Odontograma',
+      subtitle: 'Dictado por voz',
+      desc: 'El Dr. Montoya dicta el estado de cada pieza sin tocar la pantalla.',
+      video: 'https://storage.googleapis.com/aistudio-assets/copilot-demo.mp4',
+      icon: <Mic className="w-6 h-6" />
+    },
+    {
+      num: '02',
+      title: 'Explica',
+      subtitle: 'Panorámica Aumentada',
+      desc: 'El paciente ve SUS problemas sobre SU radiografía.',
+      video: 'https://storage.googleapis.com/aistudio-assets/simetria-demo.mp4',
+      icon: <Layers className="w-6 h-6" />
+    },
+    {
+      num: '03',
+      title: 'Clarity',
+      subtitle: 'El documento del paciente',
+      desc: 'Presupuesto, financiamiento y garantías. Se lo lleva a casa.',
+      video: 'https://storage.googleapis.com/aistudio-assets/copilot-demo.mp4',
+      icon: <FileText className="w-6 h-6" />
+    },
+    {
+      num: '04',
+      title: 'Compartir',
+      subtitle: 'WhatsApp Directo',
+      desc: 'Sin login. Sin app. Solo un link que genera confianza familiar.',
+      video: 'https://storage.googleapis.com/aistudio-assets/simetria-demo.mp4',
+      icon: <Share2 className="w-6 h-6" />
+    }
+  ];
+
+  return (
+    <section className="py-32 px-6 md:px-12 bg-[#050505] relative overflow-hidden">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <div>
+            <div className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.6em] mb-8">Demo del Flujo</div>
+            <h2 className="text-5xl md:text-7xl font-light text-white tracking-tighter mb-12 leading-tight">
+              Del diagnóstico <br />
+              <span className="text-white/30 italic">al tratamiento aceptado.</span>
+            </h2>
+            
+            <div className="space-y-8">
+              {steps.map((step, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentStep(i)}
+                  className={`w-full text-left p-8 rounded-[32px] transition-all duration-500 border ${currentStep === i ? 'bg-white/5 border-white/10 shadow-2xl' : 'border-transparent opacity-40 hover:opacity-60'}`}
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="text-4xl font-light text-white/10">{step.num}</div>
+                    <div>
+                      <div className="text-xl font-bold text-white mb-1">{step.title}</div>
+                      <div className="text-xs font-black uppercase tracking-widest text-indigo-velvet-400">{step.subtitle}</div>
+                    </div>
+                    {currentStep === i && <motion.div layoutId="active-step" className="ml-auto w-2 h-2 bg-indigo-velvet-500 rounded-full shadow-[0_0_15px_var(--color-indigo-velvet-500)]" />}
+                  </div>
+                  {currentStep === i && (
+                    <motion.p 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="mt-6 text-white/40 text-sm leading-relaxed"
+                    >
+                      {step.desc}
+                    </motion.p>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative aspect-[9/16] max-w-[400px] mx-auto lg:ml-auto w-full">
+            {/* Phone Frame */}
+            <div className="absolute inset-0 border-[8px] border-[#1A1A1A] rounded-[60px] shadow-2xl overflow-hidden z-10">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full h-full bg-black"
+                >
+                  <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    className="w-full h-full object-cover"
+                    src={steps[currentStep].video}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-velvet-500/10 blur-[100px] rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ChallengeSection = () => {
+  return (
+    <section className="py-32 px-6 md:px-12 bg-[#020202] relative overflow-hidden">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.6em] mb-8">El Desafío</div>
+            <h2 className="text-5xl md:text-7xl font-light text-white tracking-tighter mb-12 leading-tight">
+              La brecha de <br />
+              <span className="text-white/30 italic">la incertidumbre.</span>
+            </h2>
+            <div className="space-y-8 text-white/40 text-lg leading-relaxed">
+              <p>
+                En la odontología tradicional, el diagnóstico suele ser una "caja negra" para el paciente. La variabilidad entre profesionales y la dificultad para visualizar problemas internos generan desconfianza y abandono de tratamientos.
+              </p>
+              <p className="text-white/60 font-medium">
+                El 40% de los pacientes no inicia su tratamiento porque no entiende la gravedad de su situación o no confía plenamente en el diagnóstico subjetivo.
+              </p>
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {[
+              { title: 'Subjetividad', desc: 'Diferentes doctores, diferentes diagnósticos sobre la misma imagen.', icon: <Users className="w-6 h-6" /> },
+              { title: 'Invisibilidad', desc: 'Patologías ocultas que el ojo humano puede pasar por alto.', icon: <Eye className="w-6 h-6" /> },
+              { title: 'Desconexión', desc: 'Información técnica que no llega al entorno familiar del paciente.', icon: <Share2 className="w-6 h-6" /> }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.2 }}
+                className="p-8 bg-white/5 rounded-[32px] border border-white/10 hover:bg-white/[0.07] transition-colors"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-velvet-500/10 flex items-center justify-center text-indigo-velvet-400">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="text-white font-bold text-xl mb-1">{item.title}</div>
+                    <div className="text-white/40 text-sm">{item.desc}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ManifestoSection = () => {
+  return (
+    <section className="py-40 px-6 md:px-12 bg-indigo-velvet-950/20 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,var(--color-indigo-velvet-500)_0%,transparent_50%)]" />
+      </div>
+      
+      <div className="max-w-[1000px] mx-auto text-center relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+        >
+          <div className="text-indigo-velvet-400 text-[10px] font-black uppercase tracking-[0.8em] mb-12">Nuestro Manifiesto</div>
+          <h2 className="text-4xl md:text-6xl font-light text-white tracking-tight leading-tight mb-16">
+            No estamos reemplazando al odontólogo. <br />
+            Estamos <span className="italic text-indigo-velvet-400">aumentando su capacidad</span> de cuidar.
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
+            <div>
+              <div className="text-white font-bold text-2xl mb-4">Objetividad</div>
+              <p className="text-white/40 leading-relaxed">Datos, no opiniones. La IA entrega una base sólida y científica para cada decisión clínica.</p>
+            </div>
+            <div>
+              <div className="text-white font-bold text-2xl mb-4">Empatía</div>
+              <p className="text-white/40 leading-relaxed">Al liberar al doctor de la carga administrativa, le devolvemos el tiempo para conectar con el paciente.</p>
+            </div>
+            <div>
+              <div className="text-white font-bold text-2xl mb-4">Acceso</div>
+              <p className="text-white/40 leading-relaxed">Democratizamos el diagnóstico de alta precisión, llevándolo a cada rincón del ecosistema dental.</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
 
 const StatementSection = () => (
-  <section className="min-h-screen flex flex-col justify-center items-center px-6 relative z-20">
+  <section className="py-40 flex flex-col justify-center items-center px-6 relative z-20">
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -239,187 +850,120 @@ const StatementSection = () => (
   </section>
 );
 
-const EcosystemExplorer = () => {
-  const [selectedApp, setSelectedApp] = useState<string | null>('scandent');
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+const AppLaunchSplash = ({ app, onClose }: { app: any; onClose: () => void }) => {
+  const [progress, setProgress] = useState(0);
 
-  const apps = APPS.map(app => ({
-    ...app,
-    tag: app.tags[0],
-    dist: `${(Math.random() * 2 + 0.1).toFixed(1)} AU`,
-    image: `https://picsum.photos/seed/${app.id}-ui/1200/800`,
-    longDesc: app.desc + " Esta aplicación forma parte integral del ecosistema Humana.AI, permitiendo una integración fluida de datos clínicos para mejorar la precisión diagnóstica y la eficiencia operativa en clínicas dentales modernas."
-  }));
-
-  const currentApp = apps.find(a => a.id === selectedApp) || apps[0];
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setTimeout(onClose, 800);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 40);
+    return () => clearInterval(timer);
+  }, [onClose]);
 
   return (
-    <div className="relative w-full h-[80vh] md:h-screen bg-black overflow-hidden font-sans mt-12 mb-24 rounded-[40px] md:rounded-[80px] border border-white/5">
-      <div className="absolute top-12 left-0 right-0 z-20 text-center">
-        <h2 className="text-white text-xs font-black uppercase tracking-[0.8em] opacity-40">Ecosystem Explorer</h2>
-        <div className="text-indigo-velvet-400 text-[10px] font-bold uppercase tracking-widest mt-2">Humana.AI Universe</div>
-      </div>
-
-      {/* Menu Side */}
-      <div className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3 md:gap-4">
-        {apps.map((app) => (
-          <button
-            key={app.id}
-            onClick={() => setSelectedApp(app.id)}
-            className={`group flex items-center gap-4 transition-all duration-500 ${selectedApp === app.id ? 'opacity-100' : 'opacity-30 hover:opacity-60'}`}
-          >
-            <div 
-              className="w-6 h-6 md:w-10 md:h-10 rounded-full border border-white/20 shadow-inner overflow-hidden relative"
-              style={{ boxShadow: `inset 0 -10px 10px rgba(0,0,0,0.8), 0 0 15px ${app.color}44` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-            </div>
-            <div className="text-left hidden sm:block">
-              <div className="flex items-center gap-2">
-                {selectedApp === app.id && <motion.div layoutId="pip" className="w-4 h-[2px]" style={{ backgroundColor: app.color }} />}
-                <span className="text-white text-[10px] font-black uppercase tracking-widest">{app.name}</span>
-              </div>
-              <div className="text-[8px] text-white/40 uppercase tracking-tighter">{app.dist}</div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* 3D Scene Container */}
-      <div className="absolute inset-0 flex items-center justify-center perspective-[1000px]">
-        <div className="relative w-full h-full preserve-3d rotate-x-[15deg]">
-          {apps.map((app, idx) => {
-            const isSelected = selectedApp === app.id;
-            const offset = apps.findIndex(a => a.id === selectedApp) - idx;
-            
-            return (
-              <motion.div
-                key={app.id}
-                initial={false}
-                animate={{
-                  z: offset * -1200,
-                  opacity: 1 - Math.abs(offset) * 0.4,
-                  display: Math.abs(offset) > 2 ? 'none' : 'block'
-                }}
-                transition={{ duration: 1.5, ease: [0.33, 0, 0, 1] }}
-                className="absolute inset-0 flex flex-col items-center justify-end pb-[10vh] pointer-events-none"
-              >
-                {/* The "Planet" - Now an App Screenshot */}
-                <motion.div 
-                  animate={{ rotateY: isSelected ? 0 : 360 }}
-                  transition={{ duration: isSelected ? 0 : 60, repeat: isSelected ? 0 : Infinity, ease: "linear" }}
-                  className="w-[300px] h-[200px] md:w-[800px] md:h-[500px] rounded-[20px] md:rounded-[40px] relative overflow-hidden border border-white/10"
-                  style={{ 
-                    background: `url(${app.image})`,
-                    backgroundSize: 'cover',
-                    boxShadow: `0 20px 100px rgba(0,0,0,0.8), 0 0 40px ${app.color}22`
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute inset-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" />
-                </motion.div>
-
-                {/* Description */}
-                <motion.div 
-                  animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 50 }}
-                  className="mt-8 md:mt-12 text-center max-w-xl px-6"
-                >
-                  <h3 className="text-indigo-velvet-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.6em] mb-2 md:mb-4">{app.tag}</h3>
-                  <h1 className="text-white text-3xl md:text-6xl font-black uppercase tracking-tighter mb-4 md:mb-6">{app.name}</h1>
-                  <p className="text-white/40 text-xs md:text-sm font-medium leading-relaxed mb-6 md:mb-8 line-clamp-2 md:line-clamp-none">{app.desc}</p>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setIsPanelOpen(true); }}
-                    className="pointer-events-auto text-white text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] border-b-2 border-indigo-velvet-500 pb-2 hover:px-4 transition-all"
-                  >
-                    Launch App
-                  </button>
-                </motion.div>
-              </motion.div>
-            );
-          })}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black overflow-hidden"
+    >
+      {/* Background Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-20 blur-[100px] rounded-full"
+          style={{ background: `radial-gradient(circle, ${app.color} 0%, transparent 70%)` }}
+        />
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-[20%] left-[-10%] w-[120%] h-[1px] bg-white/20 rotate-[-12deg]" />
+          <div className="absolute bottom-[30%] left-[-10%] w-[120%] h-[1px] bg-white/20 rotate-[8deg]" />
         </div>
       </div>
 
-      {/* Side Panel */}
-      <AnimatePresence>
-        {isPanelOpen && (
-          <>
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center text-center px-6">
+        {/* Logo Container */}
+        <div className="relative w-48 h-48 mb-12">
+          {/* Orbital Rings */}
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-[-20px] border border-white/5 rounded-full"
+          />
+          <motion.div 
+            animate={{ rotate: -360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-[-10px] border border-white/10 rounded-full border-dashed"
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-[-5px] border-2 rounded-full"
+            style={{ borderColor: app.color }}
+          />
+
+          {/* Icon Background */}
+          <motion.div 
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", damping: 12, stiffness: 100, delay: 0.2 }}
+            className="absolute inset-6 rounded-full shadow-2xl flex items-center justify-center"
+            style={{ 
+              background: `linear-gradient(145deg, ${app.color}, #000)`,
+              boxShadow: `0 0 40px ${app.color}44`
+            }}
+          >
+            <div className="text-white scale-[1.5]">
+              {app.icon}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Text */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] mb-2">Clínica Miró</div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-2 text-white">
+            {app.name.split(' ')[0]}<span style={{ color: app.color }}>{app.name.split(' ')[1] || ''}</span>
+          </h1>
+          <p className="text-lg text-white/60 font-medium tracking-widest mb-1">{app.tagline}</p>
+          <p className="text-xs italic text-white/20">"Iniciando protocolos de IA..."</p>
+        </motion.div>
+
+        {/* Loader */}
+        <div className="mt-16 w-48">
+          <div className="h-[2px] w-full bg-white/10 rounded-full overflow-hidden">
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsPanelOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100]"
+              className="h-full"
+              style={{ 
+                width: `${progress}%`,
+                backgroundColor: app.color,
+                boxShadow: `0 0 10px ${app.color}`
+              }}
             />
-            <motion.div 
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#050505] border-l border-white/10 z-[110] p-8 md:p-12 overflow-y-auto"
-            >
-              <button 
-                onClick={() => setIsPanelOpen(false)}
-                className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors"
-              >
-                <X className="w-8 h-8" />
-              </button>
-              
-              <div className="mt-12">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white">
-                    {currentApp.icon}
-                  </div>
-                  <div>
-                    <h1 className="text-white text-3xl font-black uppercase tracking-tighter">{currentApp.name}</h1>
-                    <div className="text-[10px] font-black text-indigo-velvet-400 uppercase tracking-widest">{currentApp.status}</div>
-                  </div>
-                </div>
-                
-                <div className="w-12 h-1 bg-indigo-velvet-500 mb-8" />
-                
-                <img src={currentApp.image} className="w-full aspect-video object-cover rounded-2xl mb-8 border border-white/10" />
-                
-                <h2 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 opacity-40">Visión General</h2>
-                <p className="text-white/60 text-sm leading-relaxed mb-8">{currentApp.longDesc}</p>
-                
-                <h2 className="text-white text-[10px] font-black uppercase tracking-widest mb-4 opacity-40">Especificaciones</h2>
-                <div className="space-y-4">
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-white/30">Tags</span>
-                    <div className="flex gap-2">
-                      {currentApp.tags.map(tag => (
-                        <span key={tag} className="text-[8px] font-black uppercase text-indigo-velvet-400">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-white/30">Latencia</span>
-                    <span className="text-[10px] font-black uppercase text-white">{'<'} 200ms</span>
-                  </div>
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase text-white/30">Protocolo</span>
-                    <span className="text-[10px] font-black uppercase text-white">Encrypted_V2</span>
-                  </div>
-                </div>
+          </div>
+          <div className="mt-4 text-[8px] font-black text-white/20 uppercase tracking-[0.3em]">
+            {progress < 40 ? 'Sincronizando modelos...' : progress < 80 ? 'Cargando visión clínica...' : 'Finalizando análisis...'}
+          </div>
+        </div>
+      </div>
 
-                <a 
-                  href={currentApp.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full mt-12 bg-indigo-velvet-600 text-white py-6 rounded-2xl font-black uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-velvet-500 transition-colors text-center"
-                >
-                  Launch Application
-                </a>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      <style>{`
-        .preserve-3d { transform-style: preserve-3d; }
-      `}</style>
-    </div>
+      {/* Footer */}
+      <div className="absolute bottom-12 left-0 right-0 text-center">
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">
+          Powered by <strong className="text-white/40">HUMANA.AI</strong>
+        </p>
+      </div>
+    </motion.div>
   );
 };
 
@@ -466,6 +1010,95 @@ const VisionPillar = ({ num, tag, word, headline, body, actors, colorClass }: an
     </div>
   </section>
 );
+
+const AppCard = ({ app, onLaunch }: { app: any; onLaunch: (app: any) => void }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div 
+      layout
+      whileHover={{ y: -10, borderColor: 'rgba(255,255,255,0.2)' }}
+      className={`lg:col-span-2 bg-[#0A0A0A] border border-white/5 rounded-[40px] md:rounded-[60px] p-8 md:p-12 flex flex-col justify-between transition-all group cursor-pointer shadow-xl relative overflow-hidden min-h-[300px] lg:min-h-0 ${isExpanded ? 'lg:col-span-4 lg:row-span-2' : ''}`}
+    >
+      {app.id === 'implantx' && <ImplantXOverlay videoSrc={app.videoSrc} />}
+      {app.id === 'simetria' && <MiroOverlay videoSrc={app.videoSrc} />}
+      {app.id === 'copilot' && <CopilotOverlay videoSrc={app.videoSrc} />}
+      {app.id === 'zerocaries' && <ZeroCariesOverlay videoSrc={app.videoSrc} />}
+      {app.id === 'armonia' && <ArmoniaOverlay videoSrc={app.videoSrc} />}
+      
+      <div className="relative z-10 flex justify-between items-start">
+        <div className="flex flex-col gap-3">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-velvet-400 group-hover:scale-110 transition-transform duration-500">
+            {app.icon}
+          </div>
+          {app.status.includes('IP') && (
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-2 h-2 text-indigo-velvet-400" />
+              <span className="text-[7px] font-black text-indigo-velvet-400 uppercase tracking-[0.2em]">IP Protected</span>
+            </div>
+          )}
+        </div>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onLaunch(app);
+          }}
+          className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/20 hover:text-indigo-velvet-400 hover:bg-white/10 transition-all"
+        >
+          <ArrowUpRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="relative z-10 mt-8">
+        <h3 className="text-2xl md:text-3xl font-black tracking-tighter uppercase mb-2 md:mb-4">{app.name}</h3>
+        <p className="text-xs md:text-sm text-white/30 font-medium leading-relaxed mb-6">{app.desc}</p>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-6 border-t border-white/5 space-y-4">
+                <div className="text-[10px] font-black text-indigo-velvet-400 uppercase tracking-widest">Key Features</div>
+                <div className="grid grid-cols-1 gap-3">
+                  {app.tags.map((tag: string, i: number) => (
+                    <div key={i} className="flex items-center gap-3 text-xs text-white/60">
+                      <div className="w-1 h-1 rounded-full bg-indigo-velvet-500" />
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLaunch(app);
+                  }}
+                  className="w-full py-4 bg-white text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-velvet-500 hover:text-white transition-all"
+                >
+                  Launch Application
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white transition-colors mt-4"
+        >
+          {isExpanded ? 'Show Less' : 'Learn More'}
+          <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 
 const WinWinSection = () => (
   <section className="py-12 md:py-16 px-12 border-b border-white/5">
@@ -1061,6 +1694,7 @@ const HeroVideoBackground = ({ src }: { src?: string }) => {
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [launchingApp, setLaunchingApp] = useState<any>(null);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -1087,6 +1721,15 @@ export default function App() {
       <AnimatePresence>
         {!isLoaded && (
           <SplashScreen onComplete={() => setIsLoaded(true)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {launchingApp && (
+          <AppLaunchSplash 
+            app={launchingApp} 
+            onClose={() => setLaunchingApp(null)} 
+          />
         )}
       </AnimatePresence>
 
@@ -1139,9 +1782,15 @@ export default function App() {
 
       <main className="relative z-10">
         
-        <VisionHeader />
+        <HeroExplorer onLaunch={setLaunchingApp} />
 
-        <StatementSection />
+        <ChallengeSection />
+
+        <FlowDemo />
+
+        <DeepScanReveal />
+
+        <ManifestoSection />
 
         <VisionPillar 
           num="01 — 03"
@@ -1175,80 +1824,9 @@ export default function App() {
           ]}
         />
 
+        <StatementSection />
+
         <WinWinSection />
-
-        {/* Hero Section - Segmented Entry */}
-        <section className="relative flex flex-col justify-center items-center px-6 pt-20 pb-0 overflow-hidden">
-          <HeroVideoBackground src="https://storage.googleapis.com/aistudio-assets/hero-dentists.mp4" />
-          
-          <motion.div 
-            style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-            className="relative z-10 text-center flex flex-col items-center"
-          >
-            {/* Brand Signature */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className="flex items-center gap-4 mb-6"
-            >
-              <div className="text-[11px] font-bold text-white/30 uppercase tracking-[0.4em]">
-                HUMANA.AI
-              </div>
-              <div className="w-1 h-1 bg-indigo-velvet-500 rounded-full" />
-              <div className="text-[11px] font-medium text-indigo-velvet-400 italic tracking-wider">
-                Desarrollado por Clínica Miró
-              </div>
-            </motion.div>
-
-            <h1 className="text-[12vw] md:text-[8vw] font-black leading-[0.85] tracking-tighter uppercase mb-6 text-balance">
-              <motion.span 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 1.2, delay: 0.3, ease: "circOut" }}
-                className="block text-white"
-              >
-                Inteligencia Clínica
-              </motion.span>
-              <motion.span 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 1.2, delay: 0.5, ease: "circOut" }}
-                className="block text-indigo-velvet-500 italic font-display"
-              >
-                para Humanos.
-              </motion.span>
-            </h1>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 1 }}
-              className="text-xl md:text-2xl text-white/40 font-medium max-w-3xl mb-8 leading-relaxed"
-            >
-              Donde la <span className="text-white/80">ética clínica</span> y la <span className="text-white/80">rentabilidad</span> convergen para democratizar el acceso a diagnósticos de élite.
-            </motion.p>
-
-            <EcosystemExplorer />
-
-            <AudiencePortals />
-
-            {/* Scroll Indicator */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2 }}
-              className="mt-4 flex flex-col items-center gap-2"
-            >
-              <div className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20">Explore Ecosystem</div>
-              <motion.div 
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-[1px] h-12 bg-gradient-to-b from-indigo-velvet-500 to-transparent"
-              />
-            </motion.div>
-          </motion.div>
-        </section>
 
         {/* Bento Ecosystem - Overjet Style */}
         <section id="ecosistema" className="pt-0 pb-12 md:pb-24 px-6 md:px-12">
@@ -1280,7 +1858,10 @@ export default function App() {
                     <DiagnosticDetails />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4 md:gap-6 mt-8">
-                    <button className="px-8 md:px-12 py-4 md:py-6 bg-white text-black font-black rounded-2xl text-[10px] md:text-sm tracking-[0.2em] uppercase hover:bg-indigo-velvet-500 hover:text-white transition-all glow-indigo">
+                    <button 
+                      onClick={() => setLaunchingApp(APPS.find(a => a.id === 'scandent'))}
+                      className="px-8 md:px-12 py-4 md:py-6 bg-white text-black font-black rounded-2xl text-[10px] md:text-sm tracking-[0.2em] uppercase hover:bg-indigo-velvet-500 hover:text-white transition-all glow-indigo"
+                    >
                       LAUNCH_DEMO_ENV
                     </button>
                     <button className="px-8 md:px-12 py-4 md:py-6 border border-white/10 text-white font-black rounded-2xl text-[10px] md:text-sm tracking-[0.2em] uppercase hover:bg-white/5 transition-all">
@@ -1309,90 +1890,9 @@ export default function App() {
               </div>
 
               {/* App Grid */}
-              {APPS.filter(a => a.id === 'implantx' || a.id === 'simetria').map((app, i) => (
-                <motion.div 
-                  key={app.id} 
-                  whileHover={{ y: -10, borderColor: 'rgba(255,255,255,0.2)' }}
-                  className="lg:col-span-2 bg-[#0A0A0A] border border-white/5 rounded-[40px] md:rounded-[60px] p-8 md:p-12 flex flex-col justify-between transition-all group cursor-pointer shadow-xl relative overflow-hidden min-h-[300px] lg:min-h-0"
-                >
-                  {app.id === 'implantx' && <ImplantXOverlay videoSrc={app.videoSrc} />}
-                  {app.id === 'simetria' && <MiroOverlay videoSrc={app.videoSrc} />}
-                  
-                  <div className="relative z-10 flex justify-between items-start">
-                    <div className="flex flex-col gap-3">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-velvet-400 group-hover:scale-110 transition-transform duration-500">
-                        {app.icon}
-                      </div>
-                      {app.status.includes('IP') && (
-                        <div className="flex items-center gap-1.5">
-                          <Lock className="w-2 h-2 text-indigo-velvet-400" />
-                          <span className="text-[7px] font-black text-indigo-velvet-400 uppercase tracking-[0.2em]">IP Protected</span>
-                        </div>
-                      )}
-                    </div>
-                    <ArrowUpRight className="text-white/10 group-hover:text-indigo-velvet-400 transition-colors" />
-                  </div>
-                  <div className="relative z-10 mt-8">
-                    <h3 className="text-2xl md:text-3xl font-black tracking-tighter uppercase mb-2 md:mb-4">{app.name}</h3>
-                    <p className="text-xs md:text-sm text-white/30 font-medium leading-relaxed">{app.desc}</p>
-                  </div>
-                </motion.div>
+              {APPS.filter(a => a.id === 'implantx' || a.id === 'simetria' || a.id === 'copilot' || a.id === 'zerocaries' || a.id === 'armonia').map((app, i) => (
+                <AppCard key={app.id} app={app} onLaunch={setLaunchingApp} />
               ))}
-
-              {/* Wide Card - Copilot */}
-              <motion.div 
-                whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.2)' }}
-                className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[40px] md:rounded-[60px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 group cursor-pointer shadow-xl transition-all relative overflow-hidden min-h-[300px] lg:min-h-0"
-              >
-                <CopilotOverlay videoSrc={APPS.find(a => a.id === 'copilot')?.videoSrc} />
-                <div className="relative z-10 shrink-0 w-20 h-20 md:w-28 md:h-28 bg-indigo-velvet-900/20 rounded-[24px] md:rounded-[32px] flex items-center justify-center text-indigo-velvet-400 group-hover:rotate-12 transition-transform duration-500">
-                  <Brain className="w-10 h-10 md:w-14 md:h-14" />
-                </div>
-                <div className="relative z-10 text-center md:text-left">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-velvet-500/10 border border-indigo-velvet-500/20 rounded-full mb-4">
-                    <div className="w-1.5 h-1.5 bg-indigo-velvet-400 rounded-full animate-pulse" />
-                    <span className="text-[8px] font-black text-indigo-velvet-400 uppercase tracking-widest">Dentalink Integrated</span>
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-2 md:mb-4">COPILOT C3</h3>
-                  <p className="text-sm md:text-base text-white/30 font-medium leading-relaxed">
-                    Toma de decisiones asistida por LLMs entrenados en protocolos clínicos avanzados.
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* ZeroCaries Card */}
-              <motion.div 
-                whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.2)' }}
-                className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[40px] md:rounded-[60px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 group cursor-pointer shadow-xl transition-all relative overflow-hidden min-h-[300px] lg:min-h-0"
-              >
-                <ZeroCariesOverlay videoSrc={APPS.find(a => a.id === 'zerocaries')?.videoSrc} />
-                <div className="relative z-10 shrink-0 w-20 h-20 md:w-28 md:h-28 bg-emerald-900/20 rounded-[24px] md:rounded-[32px] flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform duration-500">
-                  <ShieldCheck className="w-10 h-10 md:w-14 md:h-14" />
-                </div>
-                <div className="relative z-10 text-center md:text-left">
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-2 md:mb-4">ZEROCARIES</h3>
-                  <p className="text-sm md:text-base text-white/30 font-medium leading-relaxed">
-                    Mapa de riesgo cariogénico y protocolos preventivos personalizados.
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* Armonía Card */}
-              <motion.div 
-                whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.2)' }}
-                className="lg:col-span-4 bg-[#0A0A0A] border border-white/5 rounded-[40px] md:rounded-[60px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 group cursor-pointer shadow-xl transition-all relative overflow-hidden min-h-[300px] lg:min-h-0"
-              >
-                <ArmoniaOverlay videoSrc={APPS.find(a => a.id === 'armonia')?.videoSrc} />
-                <div className="relative z-10 shrink-0 w-20 h-20 md:w-28 md:h-28 bg-rose-900/20 rounded-[24px] md:rounded-[32px] flex items-center justify-center text-rose-400 group-hover:rotate-6 transition-transform duration-500">
-                  <Sparkles className="w-10 h-10 md:w-14 md:h-14" />
-                </div>
-                <div className="relative z-10 text-center md:text-left">
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-2 md:mb-4">ARMONÍA</h3>
-                  <p className="text-sm md:text-base text-white/30 font-medium leading-relaxed">
-                    Belleza contextual y armonía facial mediante análisis de 147+ landmarks.
-                  </p>
-                </div>
-              </motion.div>
             </div>
           </div>
         </section>
